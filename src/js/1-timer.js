@@ -4,95 +4,104 @@ import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
 
-const startButon = document.querySelector('[data-start]');;
-const daysTime = document.querySelector('[data-days]');
-const hoursTime = document.querySelector('[data-hours]');
-const minutesTime = document.querySelector('[data-minutes]');
-const secondsTime = document.querySelector('[data-seconds]');
 const input = document.querySelector('#datetime-picker');
+const btnStart = document.querySelector('[data-start]');
 
-//startButon.setAttribute('disabled', 'true');
+const day = document.querySelector('[data-days]');
+const hour = document.querySelector('[data-hours]');
+const min = document.querySelector('[data-minutes]');
+const sec = document.querySelector('[data-seconds]');
 
-startButon.addEventListener('click', () => {
-  startButon.disabled = true;
-  input.disabled = true;
-  startTimer();
-});
 
-let timeDifference;
-let intervalId;
-
-const options = {
+flatpickr(input, {
   enableTime: true,
   time_24hr: true,
-    minuteIncrement: 1,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
   onClose(selectedDates) {
-    const userDate = new Date(selectedDates[0]).getTime();
-    const startDate = Date.now();
+    validateSelectedDate(selectedDates[0]);
+  },
+});
+
+btnStart.disabled = true;
 
 
-    if (userDate >= startDate) {
-      startButon.disabled = false;
-      timeDifference = userDate - startDate;
-      updateClockface(convertMs(timeDifference));
+function validateSelectedDate(selectedDate) {
+  if (selectedDate <= Date.now()) {
+    iziToast.error({
+      title: 'Error',
+      message: 'Please choose a date in the future',
+      backgroundColor: '#EF4040',
+      titleColor: '#fff',
+      titleSize: '16px',
+      titleLineHeight: '1.5',
+      messageColor: '#fff',
+      messageSize: '16px',
+      messageLineHeight: '1.5',
+      position: 'topRight',
+      timeout: 2000,
+      progressBar: false,
+    });
 
-    } else {
-    
-      iziToast.error({
-        fontSize: 'large',
-        close: false,
-        position: 'topRight',
-        messageColor: 'white',
-        timeout: 2000,
-        backgroundColor: 'red',
-        message: ("Please choose a date in the future")
-      });
-    }
-  }
-};
-flatpickr('input', options);
- 
-function updateClockface({ days, hours, minutes, seconds }) {
-  daysTime.textContent = `${days}`;
-  hoursTime.textContent = `${hours}`;
-  minutesTime.textContent = `${minutes}`;
-  secondsTime.textContent = `${seconds}`;
-}
-
-function startTimer() {
-  clearInterval(intervalId);
-  intervalId = setInterval(timer, 1000);
- 
-}
-
-function timer() {
-  if (timeDifference > 0) {
-    timeDifference -= 1000;
-    updateClockface(convertMs(timeDifference));
+    btnStart.disabled = true;
+  
   } else {
-
-    clearInterval(intervalId);
-    input.disabled = false;
-   
+    btnStart.disabled = false;
   }
 }
 
 
-function addLeadingZero(value) {
-  return String(value).padStart(2, "0");
+
+btnStart.addEventListener('click', onBtnStartClick);
+
+function onBtnStartClick() {
+  btnStart.disabled = true;
+
+
+  input.disabled = true;
+
+
+  const clockValue = input.value;
+
+  const timerInt = setInterval(() => {
+    const initDate = new Date(clockValue);
+    const diffTime = initDate - Date.now();
+    const { days, hours, minutes, seconds } = convertMs(diffTime);
+
+    day.textContent = addLeadingZero(days);
+    hour.textContent = addLeadingZero(hours);
+    min.textContent = addLeadingZero(minutes);
+    sec.textContent = addLeadingZero(seconds);
+
+    if (diffTime < 1000) {
+      clearInterval(timerInt);
+
+      input.disabled = false;
+
+    }
+  }, 1000);
 }
 
-function convertMs(time) {
+function convertMs(ms) {
+  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
 
-  const days = addLeadingZero(Math.floor(time / day));
-  const hours = addLeadingZero(Math.floor((time % day) / hour));
-  const minutes = addLeadingZero(Math.floor(((time % day) % hour) / minute));
-  const seconds = addLeadingZero(Math.floor((((time % day) % hour) % minute) / second));
+  // Remaining days
+  const days = Math.floor(ms / day);
+  // Remaining hours
+  const hours = Math.floor((ms % day) / hour);
+  // Remaining minutes
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  // Remaining seconds
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
+}
+
+function addLeadingZero(value) {
+  return `${value}`.padStart(2, '0');
 }
 
