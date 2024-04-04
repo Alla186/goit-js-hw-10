@@ -11,6 +11,8 @@ const minutesTime = document.querySelector('[data-minutes]');
 const secondsTime = document.querySelector('[data-seconds]');
 const input = document.querySelector('#datetime-picker');
 
+//startButon.setAttribute('disabled', 'true');
+
 startButon.addEventListener('click', () => {
   startButon.disabled = true;
   input.disabled = true;
@@ -48,18 +50,21 @@ const options = {
     }
   }
 };
-flatpickr('#datetime-picker', options);
-
+flatpickr('input', options);
+ 
 function updateClockface({ days, hours, minutes, seconds }) {
   daysTime.textContent = `${days}`;
   hoursTime.textContent = `${hours}`;
   minutesTime.textContent = `${minutes}`;
   secondsTime.textContent = `${seconds}`;
 }
+
 function startTimer() {
   clearInterval(intervalId);
   intervalId = setInterval(timer, 1000);
+ 
 }
+
 function timer() {
   if (timeDifference > 0) {
     timeDifference -= 1000;
@@ -68,6 +73,7 @@ function timer() {
 
     clearInterval(intervalId);
     input.disabled = false;
+   
   }
 }
 
